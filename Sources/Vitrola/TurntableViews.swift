@@ -248,3 +248,28 @@ struct VolumeHUD: View {
         .background(Capsule().fill(Color.black.opacity(0.7)))
     }
 }
+
+/// Vitrola + barra de volume que só aparece com o mouse em cima (ou enquanto se rola o volume).
+struct TurntableWithVolume: View {
+    @ObservedObject var player: PlayerModel
+    let diameter: CGFloat
+    let showArm: Bool
+    let sliderHeight: CGFloat
+    let spacing: CGFloat
+
+    @State private var hovering = false
+
+    private var showSlider: Bool { hovering || player.showVolumeHUD }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: spacing) {
+            TurntableView(player: player, diameter: diameter, showArm: showArm)
+            VolumeSlider(player: player, height: sliderHeight)
+                .opacity(showSlider ? 1 : 0)
+                .allowsHitTesting(showSlider)
+        }
+        .contentShape(Rectangle())
+        .onHover { hovering = $0 }
+        .animation(.easeInOut(duration: 0.2), value: showSlider)
+    }
+}

@@ -92,8 +92,8 @@ struct RootView: View {
     private func cardLayout(_ m: Metrics) -> some View {
         let s = m.scale
         return HStack(alignment: .center, spacing: m.gap) {
-            TurntableView(player: player, diameter: m.d, showArm: settings.showTonearm)
-            VolumeSlider(player: player, height: m.d * 0.8)
+            TurntableWithVolume(player: player, diameter: m.d, showArm: settings.showTonearm,
+                                sliderHeight: m.d * 0.8, spacing: m.gap)
 
             VStack(alignment: .leading, spacing: 4 * s) {
                 Text(player.track?.title ?? "Vitrola")

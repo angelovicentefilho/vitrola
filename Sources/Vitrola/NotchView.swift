@@ -104,8 +104,8 @@ struct NotchView: View {
                 .padding(.top, 18)
             } else {
             HStack(alignment: .center, spacing: 14) {
-                TurntableView(player: player, diameter: 100, showArm: settings.showTonearm)
-                VolumeSlider(player: player, height: 88)
+                TurntableWithVolume(player: player, diameter: 100, showArm: settings.showTonearm,
+                                    sliderHeight: 88, spacing: 14)
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(alignment: .firstTextBaseline) {
