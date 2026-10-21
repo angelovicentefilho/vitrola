@@ -1,5 +1,6 @@
 import AppKit
 import ServiceManagement
+import CoreAudio
 
 /// Ícone na barra de menus com controles e preferências.
 @MainActor
@@ -56,6 +57,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         menu.addItem(item("Próxima faixa", #selector(nextTrack), enabled: hasTrack))
         menu.addItem(item("Faixa anterior", #selector(previousTrack), enabled: hasTrack))
         menu.addItem(item((player.track?.liked ?? false) ? "Descurtir" : "Curtir", #selector(toggleLike), enabled: hasTrack))
+        menu.addItem(audioOutputMenu())
         menu.addItem(item("Volume: \(Int(player.volume))%  (role o mouse sobre a vitrola)", nil, enabled: false))
         menu.addItem(.separator())
 
@@ -107,7 +109,37 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         return parent
     }
 
+    /// Submenu "Saída de áudio" com os dispositivos do Mac; o atual vem marcado.
+    private func audioOutputMenu() -> NSMenuItem {
+        let parent = NSMenuItem(title: "Saída de áudio", action: nil, keyEquivalent: "")
+        let sub = NSMenu()
+        sub.autoenablesItems = false
+        let current = AudioOutput.currentDefault()
+        let devices = AudioOutput.devices()
+        if devices.isEmpty {
+            let none = item("Nenhum dispositivo encontrado", nil, enabled: false)
+            sub.addItem(none)
+        }
+        for device in devices {
+            let option = item(device.name, #selector(selectAudioOutput(_:)), checked: device.id == current)
+            option.representedObject = NSNumber(value: device.id)
+            sub.addItem(option)
+        }
+        parent.submenu = sub
+        if let current, let name = devices.first(where: { $0.id == current })?.name {
+            parent.title = "Saída de áudio: \(name)"
+        }
+        return parent
+    }
+
     // MARK: - Ações
+
+    @objc private func selectAudioOutput(_ sender: NSMenuItem) {
+        guard let number = sender.representedObject as? NSNumber else { return }
+        if !AudioOutput.setDefault(AudioDeviceID(number.uint32Value)) {
+            Help.alert("Não foi possível trocar a saída de áudio", "Tente pela Central de Controle do macOS.")
+        }
+    }
 
     @objc private func playPause() { player.playPause() }
     @objc private func nextTrack() { player.next() }

@@ -38,6 +38,7 @@ Se recusou sem querer: *Ajustes do Sistema › Privacidade e Segurança › Auto
 - **Ícone na barra de menus (disquinho):** controles, tamanho, visual (só o disco ou cartão), posição da janela, navegador, abrir ao iniciar sessão.
 - **Vitrola flutuante:** ligue no menu. Arraste para mover; ela lembra a posição.
 - **Volume:** role o mouse ou o trackpad sobre o notch ou a vitrola; ou arraste a barrinha vertical ao lado do disco (clique no alto-falante para silenciar).
+- **Saída de áudio:** menu › *Saída de áudio* lista alto-falantes, fones, AirPods, HDMI… Troca a saída do Mac (igual à Central de Controle), e a Vitrola vai junto.
 - **Buscar:** atalho **⌃⌘M** (Control + Command + M) de qualquer app; ou a aba "Buscar" na janela da playlist, a lupa no notch, ou o menu. Digite, Enter, clique no resultado para tocar — a música atual não é interrompida pela busca.
 - **Playlist (A seguir):** abra pelo botão de lista no notch ou no cartão, ou pelo menu. Mostra a fila do YouTube Music com capinhas e duração, destaca a faixa atual e toca qualquer faixa com um clique. Atualiza sozinha enquanto estiver aberta.
 
