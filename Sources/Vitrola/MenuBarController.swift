@@ -62,7 +62,9 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         menu.addItem(item("Mostrar no notch", #selector(toggleNotch), checked: settings.showNotch))
         menu.addItem(item("Vitrola flutuante na tela", #selector(togglePanel), checked: settings.showFloating))
         menu.addItem(item("Playlist (A seguir)", #selector(togglePlaylist), checked: settings.showPlaylist))
-        menu.addItem(item("Buscar no YouTube Music…", #selector(openSearch)))
+        let searchItem = item("Buscar no YouTube Music…", #selector(openSearch), key: "m")
+        searchItem.keyEquivalentModifierMask = [.command, .control]     // ⌃⌘M, atalho global
+        menu.addItem(searchItem)
         menu.addItem(submenu("Visual", PlayerLayout.allCases.map { ($0.title, $0.rawValue, settings.layout == $0) }, #selector(setLayout(_:))))
         menu.addItem(submenu("Tamanho", PlayerSize.allCases.map { ($0.title, $0.rawValue, settings.size == $0) }, #selector(setSize(_:))))
         menu.addItem(submenu("Janela", WindowPlacement.allCases.map { ($0.title, $0.rawValue, settings.placement == $0) }, #selector(setPlacement(_:))))

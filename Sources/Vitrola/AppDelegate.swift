@@ -1,4 +1,5 @@
 import AppKit
+import Carbon
 
 @main
 @MainActor
@@ -19,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBar: MenuBarController?
     private var notch: NotchController?
     private var playlist: PlaylistController?
+    private var searchHotKey: GlobalHotKey?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         installMainMenu()
@@ -37,6 +39,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         player.start()
+
+        // ⌃⌘M (Control + Command + M) de qualquer app: abre a busca de músicas.
+        searchHotKey = GlobalHotKey(keyCode: UInt32(kVK_ANSI_M),
+                                    modifiers: UInt32(cmdKey | controlKey), id: 1) {
+            UIState.shared.openSearch()
+        }
 
         // Rolar o mouse/trackpad sobre o notch ou a vitrola ajusta o volume.
         _ = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel]) { [weak self] event in
