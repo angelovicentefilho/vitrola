@@ -8,6 +8,7 @@ struct Metrics {
     let pad: CGFloat = 14       // margem para a sombra
     let inner: CGFloat = 16     // respiro dentro do cartão
     let gap: CGFloat = 18
+    let volumeWidth: CGFloat = 18   // igual a VolumeSlider.width
 
     @MainActor
     init(_ settings: Settings) {
@@ -24,7 +25,7 @@ struct Metrics {
         case .disc:
             return CGSize(width: turntableWidth + pad * 2, height: d + pad * 2)
         case .card:
-            return CGSize(width: pad * 2 + inner * 2 + turntableWidth + gap + VolumeSlider.width + gap + textWidth,
+            return CGSize(width: pad * 2 + inner * 2 + turntableWidth + gap + volumeWidth + gap + textWidth,
                           height: pad * 2 + inner * 2 + d)
         }
     }
