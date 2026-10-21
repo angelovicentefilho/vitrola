@@ -28,6 +28,7 @@ Se recusou sem querer: *Ajustes do Sistema › Privacidade e Segurança › Auto
 - **Notch:** recolhido, mostra a capa e o equalizador. Com o mouse em cima, ele expande com o vinil, a barra de progresso (dá para clicar para avançar), os controles e o botão de curtir.
 - **Ícone na barra de menus (disquinho):** controles, tamanho, visual (só o disco ou cartão), posição da janela, navegador, abrir ao iniciar sessão.
 - **Vitrola flutuante:** ligue no menu. Arraste para mover; ela lembra a posição.
+- **Playlist (A seguir):** abra pelo botão de lista no notch ou no cartão, ou pelo menu. Mostra a fila do YouTube Music com capinhas e duração, destaca a faixa atual e toca qualquer faixa com um clique. Atualiza sozinha enquanto estiver aberta.
 
 ## Como funciona
 

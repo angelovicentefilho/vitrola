@@ -44,6 +44,24 @@ enum BridgeCommand {
     case previous
     case seek(Double)
     case toggleLike
+    case playQueueItem(Int)
+}
+
+/// Uma faixa da fila "A seguir" do YouTube Music.
+struct QueueItem: Identifiable, Equatable {
+    let index: Int          // posição no DOM, usada para mandar tocar
+    let title: String
+    let artist: String
+    let duration: String
+    let thumbnailURL: URL?
+    let isCurrent: Bool
+
+    var id: String { "\(index)|\(title)|\(artist)" }
+
+    /// Duração em segundos a partir de "m:ss" ou "h:mm:ss".
+    var seconds: Int {
+        duration.split(separator: ":").reduce(0) { $0 * 60 + (Int($1) ?? 0) }
+    }
 }
 
 /// Lê o estado do YouTube Music e envia comandos executando JavaScript
@@ -63,6 +81,19 @@ final class YouTubeMusicBridge {
                completion: @escaping @Sendable (Result<TrackSnapshot, BridgeError>) -> Void) {
         queue.async {
             completion(self.fetchSync(choice: choice, running: running))
+        }
+    }
+
+    func fetchQueue(choice: BrowserChoice, running: Set<String>,
+                    completion: @escaping @Sendable (Result<[QueueItem], BridgeError>) -> Void) {
+        queue.async {
+            let result = self.runOnTab(js: Scripts.queue, choice: choice, running: running, cache: true)
+            switch result {
+            case .success(let output):
+                completion(.success(Scripts.parseQueue(output)))
+            case .failure(let error):
+                completion(.failure(error))
+            }
         }
     }
 
@@ -88,19 +119,29 @@ final class YouTubeMusicBridge {
     }
 
     private func fetchSync(choice: BrowserChoice, running: Set<String>) -> Result<TrackSnapshot, BridgeError> {
+        switch runOnTab(js: Scripts.state, choice: choice, running: running, cache: true) {
+        case .success(let output):
+            guard let snapshot = Scripts.parse(output) else {
+                return .failure(.other("Resposta inesperada do navegador"))
+            }
+            return .success(snapshot)
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+
+    /// Executa o JS na primeira aba do YouTube Music encontrada e devolve a saída.
+    private func runOnTab(js: String, choice: BrowserChoice, running: Set<String>, cache: Bool) -> Result<String, BridgeError> {
         let list = candidates(choice: choice, running: running)
         if list.isEmpty { return .failure(.browserNotRunning) }
 
         var firstError: BridgeError?
         for target in list {
-            switch execute(js: Scripts.state, on: target, cache: true) {
+            switch execute(js: js, on: target, cache: cache) {
             case .success(let output):
                 if output == Scripts.noTab { continue }
                 preferredBundle = target.bundleID
-                guard let snapshot = Scripts.parse(output) else {
-                    return .failure(.other("Resposta inesperada do \(target.displayName)"))
-                }
-                return .success(snapshot)
+                return .success(output)
             case .failure(let error):
                 if firstError == nil { firstError = error }
             }
@@ -198,8 +239,39 @@ enum Scripts {
     })()
     """#)
 
+    /// Lê a fila "A seguir" (painel lateral do player do YouTube Music).
+    /// Ignora as cópias escondidas em #counterpart-renderer (versão vídeo/música da mesma faixa).
+    static let queue = compact(#"""
+    (function(){
+      var nodes = document.querySelectorAll('ytmusic-player-queue-item');
+      var out = [];
+      function t(n, sel){ var e = n.querySelector(sel); return e ? (e.getAttribute('title') || e.textContent || '').trim() : ''; }
+      for (var i = 0; i < nodes.length && out.length < 300; i++) {
+        var n = nodes[i];
+        if (n.closest('#counterpart-renderer')) { continue; }
+        var title = t(n, '.song-title');
+        if (!title) { continue; }
+        var by = t(n, '.byline').split('\u2022')[0].trim();
+        var img = n.querySelector('.thumbnail img') || n.querySelector('img');
+        var thumb = img ? (img.getAttribute('src') || '') : '';
+        if (thumb.indexOf('data:') === 0) { thumb = ''; }
+        var state = n.playButtonState || n.getAttribute('play-button-state') || '';
+        var cur = n.selected === true || n.hasAttribute('selected') || state === 'playing' || state === 'paused';
+        out.push({i: i, title: title, artist: by, dur: t(n, '.duration'), thumb: thumb, cur: cur});
+      }
+      return JSON.stringify(out);
+    })()
+    """#)
+
     static func js(for command: BridgeCommand) -> String {
         switch command {
+        case .playQueueItem(let index):
+            return "(function(){ var n = document.querySelectorAll('ytmusic-player-queue-item')[" + String(index) + "]; "
+                + "if (!n) { return 'no'; } "
+                + "var b = n.querySelector('.song-info') || n; "
+                + "['mousedown', 'mouseup', 'click'].forEach(function(t){ "
+                + "b.dispatchEvent(new MouseEvent(t, {bubbles: true, cancelable: true, view: window})); }); "
+                + "return 'ok'; })()"
         case .playPause:
             return compact(#"""
             (function(){
@@ -286,6 +358,37 @@ enum Scripts {
         let dur: Double?
         let playing: Bool?
         let liked: Bool?
+    }
+
+    private struct RawQueueItem: Decodable {
+        let i: Int
+        let title: String?
+        let artist: String?
+        let dur: String?
+        let thumb: String?
+        let cur: Bool?
+    }
+
+    static func parseQueue(_ output: String) -> [QueueItem] {
+        guard let data = output.data(using: .utf8),
+              let raw = try? JSONDecoder().decode([RawQueueItem].self, from: data) else { return [] }
+        return raw.map {
+            QueueItem(index: $0.i,
+                      title: $0.title ?? "",
+                      artist: $0.artist ?? "",
+                      duration: $0.dur ?? "",
+                      thumbnailURL: thumbnail($0.thumb),
+                      isCurrent: $0.cur ?? false)
+        }
+    }
+
+    /// Miniaturas da fila: pede um tamanho pequeno mas nítido.
+    static func thumbnail(_ string: String?) -> URL? {
+        guard var s = string, !s.isEmpty else { return nil }
+        if let range = s.range(of: #"=w\d+-h\d+"#, options: .regularExpression) {
+            s.replaceSubrange(range, with: "=w120-h120")
+        }
+        return URL(string: s)
     }
 
     static func parse(_ output: String) -> TrackSnapshot? {

@@ -86,6 +86,7 @@ final class Settings: ObservableObject {
     @Published var showProgress: Bool { didSet { defaults.set(showProgress, forKey: "showProgress") } }
     @Published var showNotch: Bool { didSet { defaults.set(showNotch, forKey: "showNotch") } }
     @Published var showFloating: Bool { didSet { defaults.set(showFloating, forKey: "showFloating") } }
+    @Published var showPlaylist: Bool { didSet { defaults.set(showPlaylist, forKey: "showPlaylist") } }
 
     private init() {
         placement = WindowPlacement(rawValue: defaults.string(forKey: "placement") ?? "") ?? .front
@@ -97,5 +98,6 @@ final class Settings: ObservableObject {
         showProgress = defaults.object(forKey: "showProgress") as? Bool ?? true
         showNotch = defaults.object(forKey: "showNotch") as? Bool ?? true
         showFloating = defaults.object(forKey: "showFloating") as? Bool ?? false
+        showPlaylist = defaults.object(forKey: "showPlaylist") as? Bool ?? false
     }
 }

@@ -132,6 +132,17 @@ struct NotchView: View {
                         .help("Curtir no YouTube Music")
 
                         Button {
+                            settings.showPlaylist.toggle()
+                        } label: {
+                            Image(systemName: "list.bullet")
+                                .font(.system(size: 13, weight: .bold))
+                                .frame(width: 26, height: 26)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .help("Playlist (A seguir)")
+
+                        Button {
                             AppMenu.show()
                         } label: {
                             Image(systemName: "ellipsis")

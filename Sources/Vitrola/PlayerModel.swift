@@ -64,7 +64,7 @@ final class PlayerModel: ObservableObject {
 
     let spin = SpinClock()
 
-    private let bridge = YouTubeMusicBridge()
+    let bridge = YouTubeMusicBridge()
     private var timer: Timer?
     private var inFlight = false
     private var pollAgain = false
@@ -136,7 +136,7 @@ final class PlayerModel: ObservableObject {
         send(.toggleLike)
     }
 
-    private func send(_ command: BridgeCommand) {
+    func send(_ command: BridgeCommand) {
         bridge.send(command, choice: Settings.shared.browser, running: runningBundles())
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 400_000_000)
@@ -146,7 +146,7 @@ final class PlayerModel: ObservableObject {
 
     // MARK: - Estado
 
-    private func runningBundles() -> Set<String> {
+    func runningBundles() -> Set<String> {
         Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier })
     }
 

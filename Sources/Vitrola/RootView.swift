@@ -131,6 +131,17 @@ struct RootView: View {
                     .help("Curtir no YouTube Music")
 
                     Button {
+                        settings.showPlaylist.toggle()
+                    } label: {
+                        Image(systemName: "list.bullet")
+                            .font(.system(size: 13 * s, weight: .bold))
+                            .frame(width: 24 * s, height: 26 * s)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("Playlist (A seguir)")
+
+                    Button {
                         AppMenu.show()
                     } label: {
                         Image(systemName: "ellipsis")

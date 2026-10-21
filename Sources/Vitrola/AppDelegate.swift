@@ -18,12 +18,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: PanelController?
     private var menuBar: MenuBarController?
     private var notch: NotchController?
+    private var playlist: PlaylistController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let settings = Settings.shared
         let panel = PanelController(player: player, settings: settings)
         self.panel = panel
         notch = NotchController(player: player, settings: settings)
+        playlist = PlaylistController(player: player, queue: QueueModel(player: player), settings: settings)
         menuBar = MenuBarController(player: player, settings: settings, panel: panel)
         player.start()
 
