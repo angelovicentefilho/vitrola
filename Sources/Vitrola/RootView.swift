@@ -307,7 +307,7 @@ struct CardBackground: View {
 /// Arrastar a janela por qualquer parte que não seja um botão.
 struct WindowDragger: ViewModifier {
     let box: WindowBox
-    @State private var start: (mouse: NSPoint, origin: NSPoint)?
+    @State private var start: (mouse: NSPoint, origin: NSPoint)? = nil
 
     func body(content: Content) -> some View {
         content.gesture(

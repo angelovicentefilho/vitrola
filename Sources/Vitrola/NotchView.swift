@@ -65,10 +65,14 @@ struct NotchView: View {
     private var collapsedContent: some View {
         HStack(spacing: 0) {
             Group {
-                if player.track == nil {
+                if player.track == nil && player.status.needsHelp {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: m.height * 0.42, weight: .semibold))
                         .foregroundColor(.yellow)
+                } else if player.track == nil {
+                    Image(systemName: "music.note")
+                        .font(.system(size: m.height * 0.42, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.85))
                 } else {
                     ArtworkThumb(image: player.artwork, size: m.height - 10, corner: 6)
                 }
@@ -89,10 +93,13 @@ struct NotchView: View {
             if let message = player.status.message, player.track == nil {
                 VStack(spacing: 8) {
                     StatusPill(message: message, showHelp: player.status.needsHelp, maxWidth: m.expandedSize.width - 60)
-                    Button("Menu da Vitrola") { AppMenu.show() }
-                        .buttonStyle(.plain)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.8))
+                    HStack(spacing: 14) {
+                        Button("Abrir YouTube Music") { player.source.openYouTubeMusic() }
+                        Button("Menu da Vitrola") { AppMenu.show() }
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.85))
                 }
                 .padding(.top, 18)
             } else {

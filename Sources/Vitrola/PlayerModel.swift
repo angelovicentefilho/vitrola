@@ -15,6 +15,7 @@ enum PlayerStatus: Equatable {
         case .idle: return "Nada tocando no YouTube Music"
         case .error(let error):
             switch error {
+            case .loading: return "Carregando o YouTube Music…"
             case .browserNotRunning: return "Abra o YouTube Music no navegador"
             case .tabNotFound: return "Abra music.youtube.com em uma aba"
             case .javascriptDisabled(let browser): return "Ative “Permitir JavaScript de Apple Events” no \(browser)"
@@ -64,7 +65,7 @@ final class PlayerModel: ObservableObject {
 
     let spin = SpinClock()
 
-    let bridge = YouTubeMusicBridge()
+    let source = SourceRouter()
     private var timer: Timer?
     private var inFlight = false
     private var pollAgain = false
@@ -90,7 +91,7 @@ final class PlayerModel: ObservableObject {
     func poll() {
         guard !inFlight else { pollAgain = true; return }
         inFlight = true
-        bridge.fetch(choice: Settings.shared.browser, running: runningBundles()) { [weak self] result in
+        source.fetchState { [weak self] result in
             guard let self else { return }
             Task { @MainActor in
                 self.inFlight = false
@@ -137,7 +138,7 @@ final class PlayerModel: ObservableObject {
     }
 
     func send(_ command: BridgeCommand) {
-        bridge.send(command, choice: Settings.shared.browser, running: runningBundles())
+        source.send(command)
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 400_000_000)
             self.poll()
@@ -172,7 +173,7 @@ final class PlayerModel: ObservableObject {
             failureStreak += 1
             let definitive: Bool
             switch error {
-            case .other: definitive = false
+            case .other, .loading: definitive = false
             default: definitive = true
             }
             if !definitive && failureStreak < 3 && track != nil { return }

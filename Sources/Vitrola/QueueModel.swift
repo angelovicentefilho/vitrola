@@ -21,7 +21,7 @@ final class QueueModel: ObservableObject {
     func refresh() {
         guard !inFlight else { return }
         inFlight = true
-        player.bridge.fetchQueue(choice: Settings.shared.browser, running: player.runningBundles()) { [weak self] result in
+        player.source.fetchQueue { [weak self] result in
             guard let self else { return }
             Task { @MainActor in
                 self.inFlight = false

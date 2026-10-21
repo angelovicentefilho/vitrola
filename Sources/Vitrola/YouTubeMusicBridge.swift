@@ -31,6 +31,7 @@ struct TrackSnapshot: Equatable {
 }
 
 enum BridgeError: Error, Equatable {
+    case loading
     case browserNotRunning
     case tabNotFound
     case javascriptDisabled(String)

@@ -144,7 +144,9 @@ final class NotchController {
 
     private func updateVisibility() {
         // Aparece quando há música, ou quando falta liberar alguma permissão.
-        let shouldShow = settings.showNotch && (player.track != nil || player.status.needsHelp)
+        // No player interno, o notch fica sempre visível: é por ele que se abre o YouTube Music.
+        let shouldShow = settings.showNotch
+            && (player.track != nil || player.status.needsHelp || player.source.usesInternal)
         if shouldShow {
             if !panel.isVisible { panel.orderFrontRegardless() }
         } else {

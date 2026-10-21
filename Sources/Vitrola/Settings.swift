@@ -45,21 +45,23 @@ enum PlayerLayout: String, CaseIterable {
 }
 
 enum BrowserChoice: String, CaseIterable {
-    case auto, chrome, safari, brave, edge, arc
+    case `internal`, auto, chrome, safari, brave, edge, arc
 
     var title: String {
         switch self {
-        case .auto: return "Automático"
-        case .chrome: return "Google Chrome"
-        case .safari: return "Safari"
-        case .brave: return "Brave"
-        case .edge: return "Microsoft Edge"
-        case .arc: return "Arc"
+        case .internal: return "Player interno (sem navegador)"
+        case .auto: return "Navegador: automático"
+        case .chrome: return "Navegador: Google Chrome"
+        case .safari: return "Navegador: Safari"
+        case .brave: return "Navegador: Brave"
+        case .edge: return "Navegador: Microsoft Edge"
+        case .arc: return "Navegador: Arc"
         }
     }
 
     var targets: [BrowserTarget] {
         switch self {
+        case .internal: return []
         case .auto: return BrowserTarget.all
         case .chrome: return [.chrome]
         case .safari: return [.safari]
@@ -92,7 +94,13 @@ final class Settings: ObservableObject {
         placement = WindowPlacement(rawValue: defaults.string(forKey: "placement") ?? "") ?? .front
         size = PlayerSize(rawValue: defaults.string(forKey: "size") ?? "") ?? .medium
         layout = PlayerLayout(rawValue: defaults.string(forKey: "layout") ?? "") ?? .card
-        browser = BrowserChoice(rawValue: defaults.string(forKey: "browser") ?? "") ?? .auto
+        browser = BrowserChoice(rawValue: defaults.string(forKey: "browser") ?? "") ?? .internal
+        // Esta versão passa a usar o player interno por padrão (uma vez só).
+        if !defaults.bool(forKey: "migratedToInternal") {
+            browser = .internal
+            defaults.set(BrowserChoice.internal.rawValue, forKey: "browser")
+            defaults.set(true, forKey: "migratedToInternal")
+        }
         showTonearm = defaults.object(forKey: "showTonearm") as? Bool ?? true
         albumColorBackground = defaults.object(forKey: "albumColorBackground") as? Bool ?? true
         showProgress = defaults.object(forKey: "showProgress") as? Bool ?? true

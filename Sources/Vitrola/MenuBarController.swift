@@ -67,10 +67,11 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         menu.addItem(item("Braço da agulha", #selector(toggleArm), checked: settings.showTonearm))
         menu.addItem(item("Cor da capa no fundo", #selector(toggleAlbumColor), checked: settings.albumColorBackground))
         menu.addItem(item("Barra de progresso", #selector(toggleProgress), checked: settings.showProgress))
-        menu.addItem(submenu("Navegador", BrowserChoice.allCases.map { ($0.title, $0.rawValue, settings.browser == $0) }, #selector(setBrowser(_:))))
+        menu.addItem(submenu("Fonte da música", BrowserChoice.allCases.map { ($0.title, $0.rawValue, settings.browser == $0) }, #selector(setBrowser(_:))))
         menu.addItem(.separator())
 
-        menu.addItem(item("Abrir YouTube Music", #selector(openYouTubeMusic)))
+        menu.addItem(item(player.source.usesInternal ? "Abrir janela do YouTube Music" : "Abrir YouTube Music no navegador",
+                          #selector(openYouTubeMusic)))
         menu.addItem(item("Como configurar…", #selector(showHelp)))
         menu.addItem(item("Abrir ao iniciar sessão", #selector(toggleLogin), checked: SMAppService.mainApp.status == .enabled))
         menu.addItem(.separator())
@@ -133,19 +134,12 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     @objc private func setBrowser(_ sender: NSMenuItem) {
         if let raw = sender.representedObject as? String, let value = BrowserChoice(rawValue: raw) {
             settings.browser = value
+            if value == .internal { player.source.web.showWindow() } else { player.source.web.pause() }
             player.poll()
         }
     }
 
-    @objc private func openYouTubeMusic() {
-        guard let url = URL(string: "https://music.youtube.com") else { return }
-        if let target = settings.browser.targets.first, settings.browser != .auto,
-           let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: target.bundleID) {
-            NSWorkspace.shared.open([url], withApplicationAt: appURL, configuration: NSWorkspace.OpenConfiguration())
-        } else {
-            NSWorkspace.shared.open(url)
-        }
-    }
+    @objc private func openYouTubeMusic() { player.source.openYouTubeMusic() }
 
     @objc private func toggleLogin() {
         do {

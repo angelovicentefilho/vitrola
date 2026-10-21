@@ -8,7 +8,9 @@ enum Help {
         let alert = NSAlert()
         alert.messageText = "Conectar a Vitrola ao YouTube Music"
         alert.informativeText = """
-        A Vitrola lê a aba music.youtube.com do seu navegador. É preciso liberar duas coisas, uma vez só:
+        Jeito mais simples: menu › Fonte da música › Player interno. O YouTube Music roda dentro da Vitrola, sem navegador e sem permissões extras; faça login uma vez na janela que abrir.
+
+        Se preferir usar uma aba do navegador, é preciso liberar duas coisas, uma vez só:
 
         1. JavaScript por Apple Events
         • Chrome / Brave / Edge: menu Visualizar › Desenvolvedor › Permitir JavaScript de Apple Events.

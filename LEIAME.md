@@ -13,7 +13,16 @@ No Terminal, dentro desta pasta:
 O script compila, monta o `Vitrola.app`, copia para `/Applications` e abre.
 Se faltar o compilador, ele avisa para rodar `xcode-select --install`.
 
-## Primeira vez (uma vez só)
+## Player interno (padrão nesta branch)
+
+O YouTube Music roda **dentro da Vitrola**, sem Chrome nem Safari abertos.
+Na primeira vez abre a janela "YouTube Music — Vitrola": faça login na sua conta e toque algo.
+Pode fechar a janela, que a música continua. Para reabri-la: notch › "Abrir YouTube Music", menu › "Abrir janela do YouTube Music", ou abra a Vitrola de novo pelo Finder/Launchpad.
+As teclas de mídia do teclado também controlam o player interno.
+
+## Usando uma aba do navegador (opcional)
+
+Menu › Fonte da música › escolha o navegador. Aí é preciso, uma vez só:
 
 1. **Liberar JavaScript por Apple Events no navegador**
    - Chrome / Brave / Edge: *Visualizar › Desenvolvedor › Permitir JavaScript de Apple Events*
