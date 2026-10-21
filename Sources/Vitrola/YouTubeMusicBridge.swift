@@ -28,6 +28,7 @@ struct TrackSnapshot: Equatable {
     var duration: Double
     var isPlaying: Bool
     var liked: Bool
+    var volume: Double? = nil      // 0–100, o valor do controle de volume do YouTube Music
 }
 
 enum BridgeError: Error, Equatable {
@@ -46,6 +47,26 @@ enum BridgeCommand {
     case seek(Double)
     case toggleLike
     case playQueueItem(Int)
+    case setVolume(Int)
+    case search(String)
+    case playSearchResult(index: Int, videoID: String)
+}
+
+/// Um resultado da busca do YouTube Music (música ou vídeo).
+struct SearchResult: Identifiable, Equatable {
+    let index: Int          // posição da linha na página de busca
+    let videoID: String
+    let title: String
+    let subtitle: String    // ex.: "Música · Djavan"
+    let thumbnailURL: URL?
+
+    var id: String { "\(index)|\(videoID)" }
+}
+
+struct SearchPage: Equatable {
+    let ready: Bool
+    let query: String
+    let items: [SearchResult]
 }
 
 /// Uma faixa da fila "A seguir" do YouTube Music.
@@ -95,6 +116,14 @@ final class YouTubeMusicBridge {
             case .failure(let error):
                 completion(.failure(error))
             }
+        }
+    }
+
+    /// Executa um JS qualquer na aba do YouTube Music e devolve a saída.
+    func run(js: String, choice: BrowserChoice, running: Set<String>,
+             completion: @escaping @Sendable (Result<String, BridgeError>) -> Void) {
+        queue.async {
+            completion(self.runOnTab(js: js, choice: choice, running: running, cache: false))
         }
     }
 
@@ -236,7 +265,9 @@ enum Scripts {
       var dur = v ? v.duration : 0;
       if (!isFinite(dur)) { dur = 0; }
       var playing = v ? (!v.paused && !v.ended) : false;
-      return JSON.stringify({title: title, artist: artist, album: album, art: art, cur: cur, dur: dur, playing: playing, liked: liked});
+      var vs = document.querySelector('ytmusic-player-bar #volume-slider');
+      var vol = vs ? Number(vs.value) : (v ? Math.round(v.volume * 100) : null);
+      return JSON.stringify({title: title, artist: artist, album: album, art: art, cur: cur, dur: dur, playing: playing, liked: liked, vol: vol});
     })()
     """#)
 
@@ -264,8 +295,66 @@ enum Scripts {
     })()
     """#)
 
+    /// Lê os resultados da página de busca (só linhas que tocam: músicas e vídeos).
+    static let searchResults = compact(#"""
+    (function(){
+      var page = document.querySelector('ytmusic-search-page');
+      var q = new URLSearchParams(location.search).get('q') || '';
+      if (!page || location.pathname.indexOf('/search') !== 0) { return JSON.stringify({ready: false, q: q, items: []}); }
+      var rows = page.querySelectorAll('ytmusic-responsive-list-item-renderer');
+      var out = [];
+      function t(n, sel){ var e = n.querySelector(sel); return e ? (e.getAttribute('title') || e.textContent || '').trim() : ''; }
+      for (var i = 0; i < rows.length && out.length < 40; i++) {
+        var n = rows[i];
+        var a = n.querySelector('.title-column .title a[href*="watch?v="]') || n.querySelector('a[href*="watch?v="]');
+        if (!a) { continue; }
+        var m = (a.getAttribute('href') || '').match(/v=([^&]+)/);
+        var sec = n.querySelectorAll('.secondary-flex-columns yt-formatted-string');
+        var sub = '';
+        for (var k = 0; k < sec.length; k++) { var s = (sec[k].getAttribute('title') || sec[k].textContent || '').trim(); if (s) { sub = s; break; } }
+        var img = n.querySelector('img');
+        var th = img ? (img.getAttribute('src') || '') : '';
+        if (th.indexOf('data:') === 0) { th = ''; }
+        out.push({i: i, id: m ? m[1] : '', title: t(n, '.title-column .title') || a.textContent.trim(), sub: sub, thumb: th});
+      }
+      return JSON.stringify({ready: rows.length > 0, q: q, items: out});
+    })()
+    """#)
+
+    /// Converte texto em literal de string JavaScript (aspas e escapes corretos).
+    static func jsString(_ text: String) -> String {
+        guard let data = try? JSONEncoder().encode(text), let literal = String(data: data, encoding: .utf8) else { return "''" }
+        return literal
+    }
+
     static func js(for command: BridgeCommand) -> String {
         switch command {
+        case .setVolume(let value):
+            let v = String(min(max(value, 0), 100))
+            return "(function(){ var v = " + v + "; "
+                + "var s = document.querySelector('ytmusic-player-bar #volume-slider'); "
+                + "var p = document.querySelector('#movie_player'); "
+                + "if (s) { s.value = v; s.dispatchEvent(new CustomEvent('change', {bubbles: true})); } "
+                + "else if (p && p.setVolume) { p.setVolume(v); } "
+                + "if (p && p.isMuted && p.isMuted() && v > 0) { p.unMute(); } "
+                + "return 'ok'; })()"
+        case .search(let query):
+            // Usa a caixa de busca do próprio YouTube Music: navega sem recarregar, a música não para.
+            return "(function(){ var q = " + jsString(query) + "; "
+                + "var box = document.querySelector('ytmusic-search-box'); "
+                + "var i = box && (box.querySelector('input#input') || box.querySelector('input')); "
+                + "if (!i) { location.href = '/search?q=' + encodeURIComponent(q); return 'nav'; } "
+                + "i.focus(); i.value = q; i.dispatchEvent(new Event('input', {bubbles: true})); "
+                + "var o = {key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true}; "
+                + "i.dispatchEvent(new KeyboardEvent('keydown', o)); i.dispatchEvent(new KeyboardEvent('keypress', o)); "
+                + "i.dispatchEvent(new KeyboardEvent('keyup', o)); i.blur(); return 'ok'; })()"
+        case .playSearchResult(let index, let videoID):
+            let vid = jsString(videoID)
+            return "(function(){ var vid = " + vid + "; "
+                + "var n = document.querySelectorAll('ytmusic-search-page ytmusic-responsive-list-item-renderer')[" + String(index) + "]; "
+                + "var a = n ? (n.querySelector('.title-column .title a[href*=\"watch?v=\"]') || n.querySelector('a[href*=\"watch?v=\"]')) : null; "
+                + "if (a && (a.getAttribute('href') || '').indexOf(vid) >= 0) { a.click(); return 'ok'; } "
+                + "location.href = '/watch?v=' + vid; return 'nav'; })()"
         case .playQueueItem(let index):
             return "(function(){ var n = document.querySelectorAll('ytmusic-player-queue-item')[" + String(index) + "]; "
                 + "if (!n) { return 'no'; } "
@@ -359,6 +448,7 @@ enum Scripts {
         let dur: Double?
         let playing: Bool?
         let liked: Bool?
+        let vol: Double?
     }
 
     private struct RawQueueItem: Decodable {
@@ -368,6 +458,27 @@ enum Scripts {
         let dur: String?
         let thumb: String?
         let cur: Bool?
+    }
+
+    private struct RawSearch: Decodable {
+        struct Item: Decodable { let i: Int; let id: String?; let title: String?; let sub: String?; let thumb: String? }
+        let ready: Bool?
+        let q: String?
+        let items: [Item]?
+    }
+
+    static func parseSearch(_ output: String) -> SearchPage {
+        guard let data = output.data(using: .utf8),
+              let raw = try? JSONDecoder().decode(RawSearch.self, from: data) else {
+            return SearchPage(ready: false, query: "", items: [])
+        }
+        let items: [SearchResult] = (raw.items ?? []).compactMap { item in
+            guard let id = item.id, !id.isEmpty else { return nil }
+            return SearchResult(index: item.i, videoID: id, title: item.title ?? "",
+                                subtitle: (item.sub ?? "").replacingOccurrences(of: " \u{2022} ", with: " · "),
+                                thumbnailURL: thumbnail(item.thumb))
+        }
+        return SearchPage(ready: raw.ready ?? false, query: raw.q ?? "", items: items)
     }
 
     static func parseQueue(_ output: String) -> [QueueItem] {
@@ -403,7 +514,8 @@ enum Scripts {
             position: raw.cur ?? 0,
             duration: raw.dur ?? 0,
             isPlaying: raw.playing ?? false,
-            liked: raw.liked ?? false
+            liked: raw.liked ?? false,
+            volume: raw.vol
         )
     }
 

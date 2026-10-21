@@ -3,6 +3,8 @@ import SwiftUI
 import Combine
 
 final class VinylPanel: NSPanel {
+    /// Rolar o mouse sobre esta janela ajusta o volume (notch e vitrola flutuante).
+    var scrollsVolume = false
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
     // Permite a janela do notch ficar por cima da barra de menus.
@@ -32,6 +34,7 @@ final class PanelController {
         panel.isReleasedWhenClosed = false
         panel.becomesKeyOnlyIfNeeded = true
         panel.title = "Vitrola"
+        panel.scrollsVolume = true
         box.window = panel
 
         let host = NSHostingView(rootView: RootView(player: player, settings: settings, box: box))

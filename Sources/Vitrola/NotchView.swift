@@ -103,8 +103,9 @@ struct NotchView: View {
                 }
                 .padding(.top, 18)
             } else {
-            HStack(alignment: .center, spacing: 16) {
+            HStack(alignment: .center, spacing: 14) {
                 TurntableView(player: player, diameter: 100, showArm: settings.showTonearm)
+                VolumeSlider(player: player, height: 88)
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(alignment: .firstTextBaseline) {
@@ -137,6 +138,17 @@ struct NotchView: View {
                         }
                         .buttonStyle(.plain)
                         .help("Curtir no YouTube Music")
+
+                        Button {
+                            UIState.shared.openSearch()
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 13, weight: .bold))
+                                .frame(width: 24, height: 26)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .help("Buscar no YouTube Music")
 
                         Button {
                             settings.showPlaylist.toggle()

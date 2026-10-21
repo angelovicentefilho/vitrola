@@ -38,6 +38,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         player.start()
 
+        // Rolar o mouse/trackpad sobre o notch ou a vitrola ajusta o volume.
+        _ = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel]) { [weak self] event in
+            guard let panel = event.window as? VinylPanel, panel.scrollsVolume, let self else { return event }
+            let raw = event.scrollingDeltaY
+            guard raw != 0 else { return nil }
+            // Direção física: dedos/roda para cima = mais alto, com ou sem "rolagem natural".
+            let physical = event.isDirectionInvertedFromDevice ? -raw : raw
+            let step = event.hasPreciseScrollingDeltas ? physical * 0.35 : physical * 4
+            self.player.adjustVolume(by: Double(step))
+            return nil
+        }
+
         // Clique direito no notch ou na vitrola flutuante abre o menu.
         _ = NSEvent.addLocalMonitorForEvents(matching: [.rightMouseDown]) { event in
             guard event.window is VinylPanel else { return event }

@@ -22,8 +22,16 @@ struct TurntableView: View {
             if showArm {
                 Tonearm(diameter: d, angle: armAngle)
             }
+
+            if player.showVolumeHUD {
+                VolumeHUD(volume: player.volume, diameter: d)
+                    .frame(width: d, height: d)
+                    .transition(.opacity)
+                    .allowsHitTesting(false)
+            }
         }
         .frame(width: d * 1.16, height: d, alignment: .topLeading)
+        .animation(.easeOut(duration: 0.15), value: player.showVolumeHUD)
     }
 
     private var armAngle: Double {
@@ -166,5 +174,77 @@ struct Tonearm: View {
         .frame(width: width, height: height)
         .animation(.easeInOut(duration: 0.9), value: angle)
         .allowsHitTesting(false)
+    }
+}
+
+// MARK: - Volume
+
+/// Barra de volume vertical: arraste para ajustar, clique no alto-falante para silenciar.
+struct VolumeSlider: View {
+    @ObservedObject var player: PlayerModel
+    let height: CGFloat
+
+    static let width: CGFloat = 18
+
+    var body: some View {
+        VStack(spacing: 6) {
+            GeometryReader { geo in
+                ZStack(alignment: .bottom) {
+                    Capsule().fill(Color.white.opacity(0.22))
+                    Capsule().fill(Color.white)
+                        .frame(height: max(4, geo.size.height * CGFloat(player.volume / 100)))
+                }
+                .frame(width: 4)
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            let fraction = 1 - min(max(value.location.y / max(geo.size.height, 1), 0), 1)
+                            player.setVolume(Double(fraction) * 100)
+                        }
+                )
+            }
+
+            Button {
+                player.toggleMute()
+            } label: {
+                Image(systemName: Self.icon(for: player.volume))
+                    .font(.system(size: 10, weight: .semibold))
+                    .frame(width: Self.width, height: 14)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .opacity(0.8)
+        }
+        .frame(width: Self.width, height: height)
+        .foregroundColor(.white)
+        .help("Volume \(Int(player.volume))% — arraste, ou role o mouse sobre a vitrola")
+    }
+
+    static func icon(for volume: Double) -> String {
+        if volume <= 0 { return "speaker.slash.fill" }
+        if volume < 34 { return "speaker.wave.1.fill" }
+        if volume < 67 { return "speaker.wave.2.fill" }
+        return "speaker.wave.3.fill"
+    }
+}
+
+/// Aviso rápido de volume sobre o disco enquanto se rola o mouse.
+struct VolumeHUD: View {
+    let volume: Double
+    let diameter: CGFloat
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: VolumeSlider.icon(for: volume))
+            Text("\(Int(volume.rounded()))%")
+                .monospacedDigit()
+        }
+        .font(.system(size: max(11, diameter * 0.065), weight: .bold))
+        .foregroundColor(.white)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(Capsule().fill(Color.black.opacity(0.7)))
     }
 }

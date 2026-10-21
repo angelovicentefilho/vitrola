@@ -38,6 +38,15 @@ final class SourceRouter {
         }
     }
 
+    /// Executa um JS qualquer na página do YouTube Music (player interno ou aba).
+    func run(_ js: String, completion: @escaping @Sendable (Result<String, BridgeError>) -> Void) {
+        if usesInternal {
+            web.evaluate(js) { result in completion(result) }
+        } else {
+            bridge.run(js: js, choice: Settings.shared.browser, running: runningBundles(), completion: completion)
+        }
+    }
+
     func send(_ command: BridgeCommand) {
         if usesInternal {
             web.evaluate(Scripts.js(for: command)) { _ in }

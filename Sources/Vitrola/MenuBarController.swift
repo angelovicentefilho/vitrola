@@ -56,11 +56,13 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         menu.addItem(item("Próxima faixa", #selector(nextTrack), enabled: hasTrack))
         menu.addItem(item("Faixa anterior", #selector(previousTrack), enabled: hasTrack))
         menu.addItem(item((player.track?.liked ?? false) ? "Descurtir" : "Curtir", #selector(toggleLike), enabled: hasTrack))
+        menu.addItem(item("Volume: \(Int(player.volume))%  (role o mouse sobre a vitrola)", nil, enabled: false))
         menu.addItem(.separator())
 
         menu.addItem(item("Mostrar no notch", #selector(toggleNotch), checked: settings.showNotch))
         menu.addItem(item("Vitrola flutuante na tela", #selector(togglePanel), checked: settings.showFloating))
         menu.addItem(item("Playlist (A seguir)", #selector(togglePlaylist), checked: settings.showPlaylist))
+        menu.addItem(item("Buscar no YouTube Music…", #selector(openSearch)))
         menu.addItem(submenu("Visual", PlayerLayout.allCases.map { ($0.title, $0.rawValue, settings.layout == $0) }, #selector(setLayout(_:))))
         menu.addItem(submenu("Tamanho", PlayerSize.allCases.map { ($0.title, $0.rawValue, settings.size == $0) }, #selector(setSize(_:))))
         menu.addItem(submenu("Janela", WindowPlacement.allCases.map { ($0.title, $0.rawValue, settings.placement == $0) }, #selector(setPlacement(_:))))
@@ -112,6 +114,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     @objc private func togglePanel() { panel.toggle() }
     @objc private func toggleNotch() { settings.showNotch.toggle() }
     @objc private func togglePlaylist() { settings.showPlaylist.toggle() }
+    @objc private func openSearch() { UIState.shared.openSearch() }
     @objc private func toggleArm() { settings.showTonearm.toggle() }
     @objc private func toggleAlbumColor() { settings.albumColorBackground.toggle() }
     @objc private func toggleProgress() { settings.showProgress.toggle() }

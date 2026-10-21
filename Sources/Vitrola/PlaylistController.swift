@@ -33,7 +33,8 @@ final class PlaylistController {
         panel.title = "Vitrola – A seguir"
         box.window = panel
 
-        let host = NSHostingView(rootView: PlaylistView(queue: queue, player: player, box: box))
+        let host = NSHostingView(rootView: PlaylistView(queue: queue, search: SearchModel(player: player),
+                                                        player: player, box: box))
         host.sizingOptions = []
         panel.contentView = host
 
@@ -59,6 +60,18 @@ final class PlaylistController {
                 Task { @MainActor in
                     try? await Task.sleep(nanoseconds: 600_000_000)
                     if self.panel.isVisible { self.queue.refresh() }
+                }
+            }
+            .store(in: &cancellables)
+
+        // Pedido de busca (notch/menu): traz a janela para receber o teclado.
+        UIState.shared.$focusSearch
+            .dropFirst()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { @MainActor in
+                    self.panel.orderFrontRegardless()
+                    self.panel.makeKey()
                 }
             }
             .store(in: &cancellables)

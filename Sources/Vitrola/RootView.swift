@@ -24,7 +24,7 @@ struct Metrics {
         case .disc:
             return CGSize(width: turntableWidth + pad * 2, height: d + pad * 2)
         case .card:
-            return CGSize(width: pad * 2 + inner * 2 + turntableWidth + gap + textWidth,
+            return CGSize(width: pad * 2 + inner * 2 + turntableWidth + gap + VolumeSlider.width + gap + textWidth,
                           height: pad * 2 + inner * 2 + d)
         }
     }
@@ -92,6 +92,7 @@ struct RootView: View {
         let s = m.scale
         return HStack(alignment: .center, spacing: m.gap) {
             TurntableView(player: player, diameter: m.d, showArm: settings.showTonearm)
+            VolumeSlider(player: player, height: m.d * 0.8)
 
             VStack(alignment: .leading, spacing: 4 * s) {
                 Text(player.track?.title ?? "Vitrola")

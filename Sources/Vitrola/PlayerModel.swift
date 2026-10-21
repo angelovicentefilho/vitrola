@@ -62,6 +62,8 @@ final class PlayerModel: ObservableObject {
     @Published private(set) var status: PlayerStatus = .connecting
     @Published private(set) var artwork: NSImage?
     @Published private(set) var accent: Color = Color(white: 0.16)
+    @Published private(set) var volume: Double = 100
+    @Published private(set) var showVolumeHUD = false
 
     let spin = SpinClock()
 
@@ -74,6 +76,11 @@ final class PlayerModel: ObservableObject {
     private var anchorDate = Date()
     private var artworkURL: URL?
     private var artworkCache: [URL: (NSImage, NSColor)] = [:]
+    private var volumeHoldUntil = Date.distantPast
+    private var pendingVolume: Int?
+    private var volumeTask: Task<Void, Never>?
+    private var hudTask: Task<Void, Never>?
+    private var lastAudibleVolume: Double = 50
 
     var isPlaying: Bool { track?.isPlaying ?? false }
 
@@ -132,6 +139,41 @@ final class PlayerModel: ObservableObject {
         send(.seek(seconds))
     }
 
+    // MARK: - Volume
+
+    func setVolume(_ value: Double) {
+        let v = min(max(value, 0), 100)
+        if v > 0 { lastAudibleVolume = v }
+        volume = v
+        volumeHoldUntil = Date().addingTimeInterval(1.5)
+        flashVolumeHUD()
+
+        // Agrupa mudanças rápidas (rolagem) num envio a cada ~70 ms.
+        pendingVolume = Int(v.rounded())
+        guard volumeTask == nil else { return }
+        volumeTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 70_000_000)
+            if let pending = self.pendingVolume { self.source.send(.setVolume(pending)) }
+            self.pendingVolume = nil
+            self.volumeTask = nil
+        }
+    }
+
+    func adjustVolume(by delta: Double) { setVolume(volume + delta) }
+
+    func toggleMute() {
+        setVolume(volume > 0 ? 0 : lastAudibleVolume)
+    }
+
+    private func flashVolumeHUD() {
+        showVolumeHUD = true
+        hudTask?.cancel()
+        hudTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_100_000_000)
+            if !Task.isCancelled { self.showVolumeHUD = false }
+        }
+    }
+
     func toggleLike() {
         if var t = track { t.liked.toggle(); track = t }
         send(.toggleLike)
@@ -165,6 +207,8 @@ final class PlayerModel: ObservableObject {
             anchorPosition = snapshot.position
             anchorDate = Date()
             if track != snapshot { track = snapshot }
+            // Não sobrescreve o volume logo depois de o usuário mexer (a página demora a refletir).
+            if let v = snapshot.volume, Date() > volumeHoldUntil, abs(v - volume) > 0.5 { volume = v }
             if status != .ok { status = .ok }
             spin.set(playing: snapshot.isPlaying)
             if snapshot.artworkURL != artworkURL { loadArtwork(snapshot.artworkURL) }
