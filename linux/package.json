@@ -1,0 +1,9 @@
+{
+  "name": "vitrola-linux",
+  "private": true,
+  "type": "module",
+  "description": "Só para o Node tratar os .js como módulos ES nos testes unitários; o app roda com GJS.",
+  "scripts": {
+    "test": "node --test 'test/unit/*.test.js'"
+  }
+}

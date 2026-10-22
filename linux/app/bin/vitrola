@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Abre a Vitrola (app/src/main.js) com o GJS.
+set -euo pipefail
+SRC="$(cd "$(dirname "$(readlink -f "$0")")/../src" && pwd)"
+exec gjs -m "$SRC/main.js" "$@"
