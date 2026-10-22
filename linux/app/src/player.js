@@ -11,6 +11,7 @@ import Gtk from 'gi://Gtk?version=4.0';
 import WebKit from 'gi://WebKit?version=6.0';
 
 import {log} from './log.js';
+import {PAUSE} from './youtube/scripts.js';
 
 export const HOME = 'https://music.youtube.com';
 
@@ -54,10 +55,25 @@ export class WebPlayer {
         this._view = null;
         this._window = null;
         this._loadedOnce = false;
+        this._retryId = 0;
     }
 
     get janelaVisivel() {
         return this._window?.visible ?? false;
+    }
+
+    get window() {
+        return this._window;
+    }
+
+    /** Põe um widget (ex.: o botão de menu) no fim da barra de título da janela. */
+    addHeaderWidget(widget) {
+        this.carregar();
+        if (!this._header) {
+            this._header = new Gtk.HeaderBar();
+            this._window.set_titlebar(this._header);
+        }
+        this._header.pack_end(widget);
     }
 
     /** Cria a web view e carrega o YouTube Music (uma vez só). */
@@ -72,17 +88,34 @@ export class WebPlayer {
         settings.set_javascript_can_open_windows_automatically(true);
         settings.set_enable_developer_extras(Boolean(GLib.getenv('VITROLA_DEBUG')));
 
+        // O WebKitGTK emite FINISHED também depois de uma falha: `failed` separa os dois casos.
+        let failed = false;
         view.connect('load-changed', (v, event) => {
+            if (event === WebKit.LoadEvent.STARTED)
+                failed = false;
             if (event !== WebKit.LoadEvent.FINISHED) {
                 log(`carregando (${event}) ${v.get_uri()}`);
+                return;
+            }
+            if (failed) {
+                this._retryFirstLoad();
                 return;
             }
             this._loadedOnce = true;
             log(`carregou ${v.get_uri()}`);
         });
         view.connect('load-failed', (_v, _event, uri, error) => {
+            // Navegação interrompida por outra (clique rápido, redirecionamento) não é falha.
+            if (error.matches(WebKit.NetworkError, WebKit.NetworkError.CANCELLED))
+                return false;
+            failed = true;
             log(`falhou ao carregar ${uri}: ${error.message}`);
             return false;
+        });
+        // O processo da página caiu: recarrega para a música voltar.
+        view.connect('web-process-terminated', (v, reason) => {
+            log(`processo da página caiu (${reason}); recarregando`);
+            v.reload();
         });
         // Links que abririam outra janela (ex.: login): google/youtube na mesma, o resto no navegador.
         // Só http(s) sai para o navegador: outros esquemas (file:, apt: …) abririam apps locais.
@@ -105,11 +138,35 @@ export class WebPlayer {
             child: view,
         });
         window.set_size_request(520, 420);
+        // Fechar a janela só esconde: a música continua.
+        window.connect('close-request', () => {
+            window.set_visible(false);
+            return true;
+        });
 
         this._view = view;
         this._window = window;
         log('janela criada');
         view.load_uri(HOME);
+    }
+
+    /** Falhou antes de carregar alguma vez (ex.: sem internet ao abrir): tenta de novo em 5 s. */
+    _retryFirstLoad() {
+        if (this._loadedOnce || this._retryId)
+            return;
+        log('tentando de novo em 5 s');
+        this._retryId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
+            this._retryId = 0;
+            if (!this._loadedOnce)
+                this._view.load_uri(HOME);
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    /** Para a música (ao sair da Vitrola). */
+    pausar() {
+        if (this._loadedOnce)
+            this.executarJS(PAUSE).catch(() => {});
     }
 
     mostrar() {

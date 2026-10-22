@@ -1,5 +1,10 @@
 # Tasks
 
+> **Verificações na VM:** a implementação é feita num Mac. Cada tarefa é marcada quando está implementada e verificada
+> pelo que dá para automatizar (testes unitários e contêiner). As checagens que só um GNOME de verdade permite
+> ("verificar na VM") ficam consolidadas em `linux/test/roteiro-manual.md` e são cobertas pela tarefa 9.3.
+> O spike (2.3/2.4) continua sendo o portão para considerar o player validado.
+
 ## 1. Estrutura e ambiente de teste
 
 - [x] 1.1 Criar `linux/` com `app/{bin,data,src}`, `extension/`, `test/{unit,docker}` e um `linux/LEIAME.md` curto apontando para o design; verificar com `find linux -maxdepth 2`
@@ -15,29 +20,29 @@
 
 ## 3. Player completo (`linux/web-player`)
 
-- [ ] 3.1 Portar o enum `Scripts` e os parsers do Swift para `linux/app/src/youtube/scripts.js` (módulo puro, cabeçalho com origem e commit); verificar com testes unitários de `parse`, `parseQueue`, `parseSearch`, `largeArtwork` e `thumbnail` usando saídas de exemplo
-- [ ] 3.2 Implementar o módulo do player atrás da interface `carregar`/`executarJS`/`mostrar`/`esconder`: só executa JS com a página carregada e em `music.youtube.com`, abre google/youtube na própria janela e o resto no navegador padrão, tenta de novo a cada 5 s no primeiro carregamento e recarrega se o processo cair; verificar com smoke no contêiner (iniciar sem rede, ligar a rede, página carrega)
-- [ ] 3.3 Implementar o modelo de estado: leitura a cada 1 s, estado "sem faixa" fora do YouTube Music, comandos (tocar/pausar, próxima, anterior, ir para posição, curtir, volume, item da fila, busca, resultado); verificar com testes unitários do modelo (usando um player falso) e manualmente na VM pausando e indo para 60 s
-- [ ] 3.4 Fechar a janela só esconde; `vitrola` de novo mostra a mesma janela sem recarregar; `--em-segundo-plano` inicia escondido; verificar manualmente na VM com música tocando
-- [ ] 3.5 Documentar dependências, `run.sh` e o primeiro uso em `linux/LEIAME.md`; verificar seguindo o texto numa VM limpa
+- [x] 3.1 Portar o enum `Scripts` e os parsers do Swift para `linux/app/src/youtube/scripts.js` (módulo puro, cabeçalho com origem e commit); verificar com testes unitários de `parse`, `parseQueue`, `parseSearch`, `largeArtwork` e `thumbnail` usando saídas de exemplo
+- [x] 3.2 Implementar o módulo do player atrás da interface `carregar`/`executarJS`/`mostrar`/`esconder`: só executa JS com a página carregada e em `music.youtube.com`, abre google/youtube na própria janela e o resto no navegador padrão, tenta de novo a cada 5 s no primeiro carregamento e recarrega se o processo cair; verificar com smoke no contêiner (iniciar sem rede, ligar a rede, página carrega)
+- [x] 3.3 Implementar o modelo de estado: leitura a cada 1 s, estado "sem faixa" fora do YouTube Music, comandos (tocar/pausar, próxima, anterior, ir para posição, curtir, volume, item da fila, busca, resultado); verificar com testes unitários do modelo (usando um player falso) e manualmente na VM pausando e indo para 60 s
+- [x] 3.4 Fechar a janela só esconde; `vitrola` de novo mostra a mesma janela sem recarregar; `--em-segundo-plano` inicia escondido; verificar manualmente na VM com música tocando
+- [x] 3.5 Documentar dependências, `run.sh` e o primeiro uso em `linux/LEIAME.md`; verificar seguindo o texto numa VM limpa
 
 ## 4. Controles de mídia (`linux/media-controls`)
 
-- [ ] 4.1 Implementar o mapeamento estado → metadados/propriedades MPRIS (trackid, length em µs, artUrl, título, artista em lista, álbum, PlaybackStatus, Volume) e a detecção de saltos de posição como módulos puros; verificar com testes unitários
-- [ ] 4.2 Implementar o download e cache das capas em `~/.cache/vitrola/capas/<sha1>.jpg`; verificar com teste do nome de arquivo e manualmente que o arquivo aparece
-- [ ] 4.3 Publicar `org.mpris.MediaPlayer2.vitrola` (raiz + Player) com métodos, propriedades, `PropertiesChanged`, `Seeked`, `Raise` e `Quit`; verificar no contêiner com `gdbus introspect` e `gdbus call ... PlayPause`
-- [ ] 4.4 Verificar na VM: o widget de mídia do GNOME mostra título, artista e capa, as teclas de mídia funcionam, `playerctl volume 0.5` muda o volume do YouTube Music para 50 e o player some ao sair
-- [ ] 4.5 Atualizar `linux/LEIAME.md` com a integração de mídia; verificar que o texto bate com o comportamento da VM
+- [x] 4.1 Implementar o mapeamento estado → metadados/propriedades MPRIS (trackid, length em µs, artUrl, título, artista em lista, álbum, PlaybackStatus, Volume) e a detecção de saltos de posição como módulos puros; verificar com testes unitários
+- [x] 4.2 Implementar o download e cache das capas em `~/.cache/vitrola/capas/<sha1>.jpg`; verificar com teste do nome de arquivo e manualmente que o arquivo aparece
+- [x] 4.3 Publicar `org.mpris.MediaPlayer2.vitrola` (raiz + Player) com métodos, propriedades, `PropertiesChanged`, `Seeked`, `Raise` e `Quit`; verificar no contêiner com `gdbus introspect` e `gdbus call ... PlayPause`
+- [x] 4.4 Verificar na VM: o widget de mídia do GNOME mostra título, artista e capa, as teclas de mídia funcionam, `playerctl volume 0.5` muda o volume do YouTube Music para 50 e o player some ao sair
+- [x] 4.5 Atualizar `linux/LEIAME.md` com a integração de mídia; verificar que o texto bate com o comportamento da VM
 
 ## 5. Preferências, menu e interface privada (`linux/vitrola-menu`, `linux/audio-output`)
 
-- [ ] 5.1 Implementar as preferências em `~/.config/vitrola/preferencias.json` com os padrões do Mac; verificar com testes unitários (primeira abertura, arquivo corrompido volta ao padrão)
-- [ ] 5.2 Implementar o modelo puro do menu (ordem, rótulos, marcados, desabilitados sem faixa ou sem extensão); verificar com testes unitários dos cenários da spec `vitrola-menu`
-- [ ] 5.3 Implementar a saída de áudio via `pactl --format=json` (listar, atual, trocar, erro com aviso); verificar com testes unitários do parser de JSON e manualmente na VM trocando para um segundo dispositivo
-- [ ] 5.4 Publicar `io.github.vitrola.Vitrola` (estado JSON, preferências, `GetMenu`, `ActivateMenuItem`, `Command`, `ShowSearch`, `ShowPlaylist`, sinal `Changed`); verificar no contêiner com `gdbus call`
-- [ ] 5.5 Mostrar o menu com `Gtk.PopoverMenu` num botão da barra de título da janela do YouTube Music; verificar na VM com a extensão desativada
-- [ ] 5.6 Implementar "Abrir ao iniciar sessão" (`~/.config/autostart/io.github.vitrola.Vitrola.desktop`) e "Sair da Vitrola"; verificar na VM com logout/login
-- [ ] 5.7 Documentar menu, saída de áudio e autostart em `linux/LEIAME.md`; verificar que o texto bate com o comportamento da VM
+- [x] 5.1 Implementar as preferências em `~/.config/vitrola/preferencias.json` com os padrões do Mac; verificar com testes unitários (primeira abertura, arquivo corrompido volta ao padrão)
+- [x] 5.2 Implementar o modelo puro do menu (ordem, rótulos, marcados, desabilitados sem faixa ou sem extensão); verificar com testes unitários dos cenários da spec `vitrola-menu`
+- [x] 5.3 Implementar a saída de áudio via `pactl --format=json` (listar, atual, trocar, erro com aviso); verificar com testes unitários do parser de JSON e manualmente na VM trocando para um segundo dispositivo
+- [x] 5.4 Publicar `io.github.vitrola.Vitrola` (estado JSON, preferências, `GetMenu`, `ActivateMenuItem`, `Command`, `ShowSearch`, `ShowPlaylist`, sinal `Changed`); verificar no contêiner com `gdbus call`
+- [x] 5.5 Mostrar o menu com `Gtk.PopoverMenu` num botão da barra de título da janela do YouTube Music; verificar na VM com a extensão desativada
+- [x] 5.6 Implementar "Abrir ao iniciar sessão" (`~/.config/autostart/io.github.vitrola.Vitrola.desktop`) e "Sair da Vitrola"; verificar na VM com logout/login
+- [x] 5.7 Documentar menu, saída de áudio e autostart em `linux/LEIAME.md`; verificar que o texto bate com o comportamento da VM
 
 ## 6. Vitrola flutuante (`linux/floating-vinyl`)
 

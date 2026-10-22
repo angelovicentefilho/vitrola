@@ -1,43 +1,65 @@
 // Ponto de entrada da Vitrola para Linux: gjs -m linux/app/src/main.js
-// Instância única via Gtk.Application: abrir de novo só mostra a janela existente.
+// Instância única via Gtk.Application: rodar `vitrola` de novo repassa o pedido para a que já está aberta.
+//
+//   vitrola                     abre (ou mostra) a janela do YouTube Music
+//   vitrola --em-segundo-plano  inicia com a janela escondida (usado ao iniciar a sessão)
+//   vitrola --buscar            abre a busca (para um atalho personalizado do GNOME)
+//   vitrola --playlist          abre a playlist "A seguir"
 
+import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk?version=4.0';
 import System from 'system';
 
+import {Vitrola} from './app.js';
+import {APP_ID} from './desktop-entry.js';
 import {log} from './log.js';
-import {WebPlayer} from './player.js';
 
-export const APP_ID = 'io.github.vitrola.Vitrola';
-
-const app = new Gtk.Application({application_id: APP_ID});
+const app = new Gtk.Application({
+    application_id: APP_ID,
+    flags: Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
+});
 GLib.set_application_name('Vitrola');
 
-let player = null;
+const option = (name, description) =>
+    app.add_main_option(name, 0, GLib.OptionFlags.NONE, GLib.OptionArg.NONE, description, null);
+option('em-segundo-plano', 'Inicia sem mostrar a janela do YouTube Music');
+option('buscar', 'Abre a busca no YouTube Music');
+option('playlist', 'Abre a playlist "A seguir"');
 
-app.connect('startup', () => {
-    player = new WebPlayer(app);
-    player.carregar();
+const vitrola = new Vitrola(app);
+app.connect('startup', () => vitrola.startup());
+
+app.connect('command-line', (_app, commandLine) => {
+    const options = commandLine.get_options_dict();
+    if (options.contains('buscar')) {
+        log('abrindo a busca');
+        vitrola.showSearch();
+    } else if (options.contains('playlist')) {
+        log('abrindo a playlist');
+        vitrola.showPlaylist();
+    } else if (options.contains('em-segundo-plano')) {
+        log('iniciou em segundo plano');
+    } else {
+        log('mostrando a janela');
+        vitrola.player.mostrar();
+    }
+    return 0;
 });
 
-app.connect('activate', () => {
-    player.mostrar();
-    if (GLib.getenv('VITROLA_DEBUG'))
-        logPageTitle();
-});
+if (GLib.getenv('VITROLA_DEBUG'))
+    app.connect('startup', () => logStateChanges());
 
-/** Diagnóstico do teste de fumaça: confirma que o JS da página responde. */
-function logPageTitle() {
-    GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
-        player.executarJS('document.title')
-            .then(title => {
-                if (title)
-                    log(`título da página: ${title}`);
-                else
-                    return Promise.reject(new Error('fora do YouTube Music'));
-            })
-            .catch(() => logPageTitle());
-        return GLib.SOURCE_REMOVE;
+/** Diagnóstico (VITROLA_DEBUG): registra mudanças de estado; o teste de fumaça procura estas linhas. */
+function logStateChanges() {
+    let last = '';
+    vitrola.model.connect(m => {
+        const line = m.track
+            ? `estado: ${m.status} "${m.track.title}" — ${m.track.artist} (${m.isPlaying ? 'tocando' : 'pausado'})`
+            : `estado: ${m.status} ${m.message ?? ''}`.trim();
+        if (line !== last)
+            log(line);
+        last = line;
     });
 }
 

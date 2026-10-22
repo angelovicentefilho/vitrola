@@ -18,6 +18,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         xauth \
         dbus-x11 \
         fonts-dejavu-core \
+        libglib2.0-bin \
+        playerctl \
+        pulseaudio \
+        imagemagick \
+        adwaita-icon-theme \
+        xdotool \
     && rm -rf /var/lib/apt/lists/*
 
 # Sem GPU no contêiner: desenho por software. O sandbox do WebKit (bubblewrap) não

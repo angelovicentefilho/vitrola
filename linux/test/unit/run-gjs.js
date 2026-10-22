@@ -8,7 +8,8 @@ const dir = GLib.path_get_dirname(GLib.filename_from_uri(import.meta.url)[0]);
 const names = [];
 const children = Gio.File.new_for_path(dir).enumerate_children('standard::name', 0, null);
 for (let info = children.next_file(null); info; info = children.next_file(null)) {
-    if (info.get_name().endsWith('.test.js'))
+    // *.test.js rodam no Node e no GJS; *.gjstest.js só no GJS (usam GLib, Soup…).
+    if (info.get_name().endsWith('.test.js') || info.get_name().endsWith('.gjstest.js'))
         names.push(info.get_name());
 }
 names.sort();

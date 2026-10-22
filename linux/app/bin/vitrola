@@ -2,4 +2,6 @@
 # Abre a Vitrola (app/src/main.js) com o GJS.
 set -euo pipefail
 SRC="$(cd "$(dirname "$(readlink -f "$0")")/../src" && pwd)"
+# O "Abrir ao iniciar sessão" grava este caminho no autostart.
+export VITROLA_LAUNCHER="$(readlink -f "$0")"
 exec gjs -m "$SRC/main.js" "$@"
