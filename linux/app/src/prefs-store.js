@@ -15,6 +15,8 @@ export class PrefsStore {
         this._listeners = new Map();
         this._nextListener = 1;
         let text = '';
+        /** Ainda não havia preferências salvas: é a primeira vez que a Vitrola abre. */
+        this.firstRun = !GLib.file_test(path, GLib.FileTest.EXISTS);
         try {
             const [, bytes] = GLib.file_get_contents(path);
             text = new TextDecoder().decode(bytes);
@@ -22,6 +24,8 @@ export class PrefsStore {
             // Primeira abertura: fica com os padrões.
         }
         this.values = parsePrefs(text);
+        if (this.firstRun)
+            this._save();
     }
 
     get(key) {

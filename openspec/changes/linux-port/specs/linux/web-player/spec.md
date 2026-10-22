@@ -28,6 +28,17 @@ O sistema SHALL guardar cookies e dados do site em armazenamento próprio do usu
 - **WHEN** o usuário inicia o login do Google dentro da janela
 - **THEN** a página de login aceita e-mail e senha, sem a mensagem de navegador não seguro
 
+### Requirement: Janela do YouTube Music escondida ao abrir
+Ao iniciar, a Vitrola SHALL manter a janela do YouTube Music escondida e mostrar só a vitrola flutuante, exceto na primeira abertura, quando a janela SHALL aparecer para o login.
+
+#### Scenario: Abrir depois da primeira vez
+- **WHEN** o usuário já usou a Vitrola antes e a abre de novo
+- **THEN** a música pode ser controlada pela vitrola flutuante e a janela do YouTube Music não aparece
+
+#### Scenario: Abrir com a Vitrola já rodando
+- **WHEN** a Vitrola já está aberta e o usuário a abre de novo (atalho do menu de apps ou `vitrola`)
+- **THEN** a janela do YouTube Music aparece
+
 ### Requirement: Fechar a janela não para a música
 Fechar a janela do YouTube Music SHALL apenas escondê-la; a reprodução e a Vitrola SHALL continuar rodando até o usuário mandar sair.
 

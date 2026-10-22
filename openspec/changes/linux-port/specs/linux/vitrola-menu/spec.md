@@ -39,7 +39,7 @@ O menu SHALL ter os mesmos itens e estados no ícone da barra superior, no notch
 - **THEN** "Playlist (A seguir)" aparece marcado nos dois
 
 ### Requirement: Preferências persistentes
-Todas as opções marcáveis do menu SHALL ser salvas e restauradas ao reabrir a Vitrola, com os padrões do Mac: notch ligado, vitrola flutuante desligada, playlist desligada, visual "Cartão com informações", tamanho Médio, "Sempre na frente", braço da agulha, cor da capa e barra de progresso ligados.
+Todas as opções marcáveis do menu SHALL ser salvas e restauradas ao reabrir a Vitrola, com os padrões: notch ligado, vitrola flutuante ligada, playlist desligada, visual "Cartão com informações", tamanho Médio, "Sempre na frente", braço da agulha, cor da capa e barra de progresso ligados.
 
 #### Scenario: Primeira abertura
 - **WHEN** a Vitrola abre pela primeira vez

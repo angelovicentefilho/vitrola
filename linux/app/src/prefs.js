@@ -1,4 +1,5 @@
-// Preferências da Vitrola: valores aceitos, padrões (os mesmos do Mac) e leitura tolerante.
+// Preferências da Vitrola: valores aceitos, padrões e leitura tolerante.
+// Os padrões são os do Mac, menos a vitrola flutuante, que no Linux vem ligada (design.md D12b).
 // Módulo puro; quem lê e grava o arquivo é o prefs-store.js.
 
 export const CHOICES = Object.freeze({
@@ -9,7 +10,7 @@ export const CHOICES = Object.freeze({
 
 export const DEFAULTS = Object.freeze({
     showNotch: true,
-    showFloating: false,
+    showFloating: true,
     showPlaylist: false,
     layout: 'card',
     size: 'medium',

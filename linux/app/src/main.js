@@ -1,7 +1,8 @@
 // Ponto de entrada da Vitrola para Linux: gjs -m linux/app/src/main.js
 // Instância única via Gtk.Application: rodar `vitrola` de novo repassa o pedido para a que já está aberta.
 //
-//   vitrola                     abre (ou mostra) a janela do YouTube Music
+//   vitrola                     abre a Vitrola (só o disco); se ela já estiver rodando, mostra a janela do
+//                               YouTube Music. Na primeira vez a janela aparece, para o login.
 //   vitrola --em-segundo-plano  inicia com a janela escondida (usado ao iniciar a sessão)
 //   vitrola --buscar            abre a busca (para um atalho personalizado do GNOME)
 //   vitrola --playlist          abre a playlist "A seguir"
@@ -40,9 +41,12 @@ app.connect('command-line', (_app, commandLine) => {
         vitrola.showPlaylist();
     } else if (options.contains('em-segundo-plano')) {
         log('iniciou em segundo plano');
-    } else {
+    } else if (commandLine.get_is_remote() || vitrola.prefs.firstRun) {
+        // Aberta de novo com ela já rodando, ou primeira vez (precisa do login): mostra o YouTube Music.
         log('mostrando a janela');
         vitrola.player.mostrar();
+    } else {
+        log('iniciou com a janela do YouTube Music escondida');
     }
     return 0;
 });

@@ -1,9 +1,9 @@
 import {test, assert} from './harness.js';
 import {DEFAULTS, isValid, parsePrefs, serializePrefs} from '../../app/src/prefs.js';
 
-test('primeira abertura: padrões do Mac', () => {
+test('primeira abertura: padrões (vitrola flutuante ligada)', () => {
     assert.deepEqual(parsePrefs(''), {
-        showNotch: true, showFloating: false, showPlaylist: false, layout: 'card', size: 'medium',
+        showNotch: true, showFloating: true, showPlaylist: false, layout: 'card', size: 'medium',
         placement: 'front', showTonearm: true, albumColorBackground: true, showProgress: true,
     });
 });
@@ -16,9 +16,9 @@ test('arquivo corrompido volta ao padrão', () => {
 
 test('valores salvos válidos são mantidos; inválidos e desconhecidos não', () => {
     const prefs = parsePrefs(JSON.stringify({
-        showFloating: true, size: 'large', layout: 'disco', placement: 'desktop', showNotch: 'sim', extra: 1,
+        showFloating: false, size: 'large', layout: 'disco', placement: 'desktop', showNotch: 'sim', extra: 1,
     }));
-    assert.equal(prefs.showFloating, true);
+    assert.equal(prefs.showFloating, false);
     assert.equal(prefs.size, 'large');
     assert.equal(prefs.layout, 'card', 'layout inválido volta ao padrão');
     assert.equal(prefs.placement, 'front', '"Na mesa" não existe no Linux');

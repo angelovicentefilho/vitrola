@@ -25,11 +25,14 @@ O plano completo (proposta, specs, design e tarefas) está em
 
 ## Primeiro uso
 
-- Abre a janela **"YouTube Music — Vitrola"**: faça login na sua conta e toque algo.
-- O login fica salvo só para a Vitrola, em `~/.local/share/vitrola/webkit`. Na próxima vez ela abre já logada.
-- **Fechar a janela não para a música**: ela só se esconde. Para mostrá-la de novo, rode `vitrola`
-  (ou `linux/run.sh`) outra vez — a Vitrola é de instância única, então isso só traz a janela de volta.
-- Para sair de vez: **Ctrl+Q** com a janela em foco.
+- Na **primeira vez** abrem a vitrola (o disco) e a janela **"YouTube Music — Vitrola"**: faça login na sua conta
+  e toque algo. O login fica salvo só para a Vitrola, em `~/.local/share/vitrola/webkit`.
+- **Das próximas vezes** aparece só o disco; o YouTube Music fica escondido, tocando por trás.
+- Para ver a janela do YouTube Music: abra a Vitrola de novo (`vitrola` ou `linux/run.sh`) com ela já rodando,
+  ou use o menu › "Abrir janela do YouTube Music".
+- O menu fica no **clique direito** sobre o disco e no botão **⋯** do cartão (e no ☰ da janela do YouTube Music).
+- **Fechar a janela do YouTube Music não para a música**: ela só se esconde.
+- Para sair de vez: menu › **Sair da Vitrola** (ou **Ctrl+Q** com a janela do YouTube Music em foco).
 - `vitrola --em-segundo-plano` inicia com a janela escondida (é o que o "Abrir ao iniciar sessão" usa).
 
 Se o login do Google recusar o navegador, dá para testar outro user-agent:

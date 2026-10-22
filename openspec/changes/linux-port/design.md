@@ -78,6 +78,9 @@ A capa é baixada (`=w800-h800`) para `~/.cache/vitrola/capas/<sha1>.jpg` e info
 ### D12. Preferências em JSON do app; posição da janela e atalho nas GSettings da extensão
 O app guarda `~/.config/vitrola/preferencias.json`, com os padrões do Mac, e não precisa instalar esquema GSettings. A extensão guarda o que só ela usa (posição, atalho) no esquema dela, compilado pelo `install.sh`.
 
+### D12b. Disco à vista, YouTube Music escondido
+Diferente do Mac, a vitrola flutuante vem ligada por padrão e a janela do YouTube Music abre escondida (menos na primeira abertura, para o login). No Linux ela é o principal elemento visual até a extensão estar ativa, e o pedido do usuário foi ver o disco, não o site. Abrir a Vitrola de novo enquanto ela roda continua mostrando a janela, para nunca ficar sem acesso a ela.
+
 ### D13. "Abrir ao iniciar sessão" via `~/.config/autostart`
 Um arquivo `.desktop` com `Exec=vitrola --em-segundo-plano`, que inicia o player com a janela escondida. Criado e removido pelo app.
 

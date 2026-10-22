@@ -11,7 +11,8 @@ Marque `[x]` no que passou e anote o que falhou. Este arquivo é o registro da t
 
 ## Player (`linux/web-player`)
 
-- [ ] Primeira abertura mostra "YouTube Music — Vitrola" com a página carregada
+- [ ] Primeira abertura mostra o disco e "YouTube Music — Vitrola" com a página carregada
+- [ ] Da segunda vez em diante abre só o disco; abrir de novo com ela rodando mostra o YouTube Music
 - [ ] Login do Google funciona; ao reabrir, já está logado (ver também `spike.md`)
 - [ ] Uma música toca e o som sai pela saída padrão
 - [ ] Pausar pela própria página e ir para 1:00 na barra do YouTube Music funcionam
